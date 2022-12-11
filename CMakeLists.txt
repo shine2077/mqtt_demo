@@ -37,9 +37,20 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 ## link directories
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 
-add_executable(data_publish src/data_publish.cpp)
+add_executable(data_publish src/data_publish.cpp
+        src/sqliteclient/sqliteclient.h
+        src/sqliteclient/sqliteclient.cpp)
+
+
+add_executable(sqlite_test "")
+target_sources(sqlite_test
+        PRIVATE
+        test/sqlite_test.cpp
+        src/sqliteclient/sqliteclient.h
+        src/sqliteclient/sqliteclient.cpp)
 
 ## link binaries
 target_link_libraries(data_publish -lpaho-mqttpp3 -lpaho-mqtt3a -lpaho-mqtt3as SQLiteCpp)
+target_link_libraries(sqlite_test SQLiteCpp)
 
 
