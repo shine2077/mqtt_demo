@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <string>
 #include <memory>
+#include <vector>
 
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <SQLiteCpp/VariadicBind.h>
@@ -30,9 +31,22 @@ public:
     //clean flag is false, maintain this.
     void createTable(const std::string &tablename, bool clean = false);
 
+    void instert_date(const std::string& key, const std::string &content);
+
+    bool contains_key(const std::string& key);
+
+    std::vector<std::string> keys();
+
+    std::string getValue(const std::string &key);
+
+    void removeKey(const std::string &key);
+
+    void clearTable();
+
 
 private:
     std::unique_ptr<SQLite::Database>  mDb;    ///< Database connection
+    std::string table_;
 };
 
 #endif //MQTT_DEMO_SQLITECLIENT_H

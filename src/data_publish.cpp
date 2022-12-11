@@ -64,7 +64,7 @@ using namespace std;
 using namespace std::chrono;
 
 const std::string DFLT_ADDRESS { "tcp://47.95.150.143:1883" };
-const std::string CLIENT_ID { "paho-cpp-data-publish" };
+const std::string CLIENT_ID { "mqttclient" };
 
 const string TOPIC { "data/rand" };
 const int	 QOS = 1;
@@ -76,6 +76,7 @@ const int MAX_BUFFERED_MSGS = 100;	// 100 * 3sec => 5min off-line buffering
 /////////////////////////////////////////////////////////////////////////////
 
 #include <SQLiteCpp/SQLiteCpp.h>
+#include "sqliteclient/sqliteclient.h"
 
 
 #ifdef SQLITECPP_ENABLE_ASSERT_HANDLER
@@ -96,30 +97,20 @@ class encoded_sqlite3_persistence : virtual public mqtt::iclient_persistence
 {
 	// The name of the db
 	// Used as the database name
-	string name_;
+	string dbname_;
+    //string tablename_;
 
-	// A key for encoding the data
-	string encodeKey_;
-
-	// sqlite db
-	unique_ptr<SQLite::Database> db;
-
-	// Simple, in-place XOR encoding and decoding
-	void encode(string& s) const {
-		size_t n = encodeKey_.size();
-		if (n == 0 || s.empty()) return;
-
-		for (size_t i=0; i<s.size(); ++i)
-			s[i] ^= encodeKey_[i%n];
-	}
-
-	// Gets the persistence file name for the supplied key.
-	string path_name(const string& key) const { return name_ + "/" + key; }
+	// sqlite client
+	SQLiteClient* sqlite_client;
 
 public:
 	// Create the persistence object with the specified encoding key
 	encoded_sqlite3_persistence(const string& encodeKey)
-			: encodeKey_(encodeKey) {}
+			: sqlite_client(new SQLiteClient) {}
+
+    virtual ~encoded_sqlite3_persistence(){
+        delete sqlite_client;
+    }
 
 	// "Open" the persistence store.
 	// Create a directory for persistence files, using the client ID and
@@ -132,49 +123,40 @@ public:
 		if (clientId.empty() || serverURI.empty())
 			throw mqtt::persistence_exception();
 
-		name_ = serverURI + "-" + clientId;
-		std::replace(name_.begin(), name_.end(), ':', '-');
+		dbname_ = clientId;
+		std::replace(dbname_.begin(), dbname_.end(), ':', '-');
 
-		db = make_unique<SQLite::Database>(name_, SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
-
-		//create table if not exists
-        db->exec("CREATE TABLE IF NOT EXISTS OFFLINE (key TEXT PRIMARY KEY, timestamp INT, offlinedata TEXT)");
+        sqlite_client->open(dbname_, SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
+        sqlite_client->createTable("test", false);
 	}
 
 	// Close the persistent database that was previously opened.
 	void close() override {
-		db.reset(nullptr);
+		delete sqlite_client;
 	}
 
 	// Clear Table.
 	void clear() override {
-		db->exec("DELETE FROM OFFLINE");
+		sqlite_client->clearTable();
 	}
 
 	// Returns whether or not data is persisted using the specified key.
 	// We just look for a file in the store directory with the same name as
 	// the key.
 	bool contains_key(const string& key) override {
-		SQLite::Statement query(*db.get(), "SELECT key FROM OFFLINE");		
-		while (query.executeStep())
-        {
-            auto key_ = query.getColumn(0).getString();
-			if(key_ == key){
-				return true;
-			}
-		}
-		return false;
+        string key_ = key;
+        key_.erase(std::remove(key_.begin(), key_.end(), '-'),
+                   key_.end());
+		return sqlite_client->contains_key(key_);
 	}
 
 	// Returns the keys in this persistent data store.
 	mqtt::string_collection keys() const override {
 		mqtt::string_collection ks;
-		SQLite::Statement query(*db.get(), "SELECT key FROM OFFLINE");
-		while (query.executeStep())
-        {
-            auto key_ = query.getColumn(0).getString();
-			ks.push_back(key_);
-		}
+		vector<string> keys_ = sqlite_client->keys();
+		for(auto key_ : keys_){
+            ks.push_back(key_);
+        }
 		return ks;
 	}
 
@@ -186,20 +168,33 @@ public:
 	// concat a string so that the encoding key lines up with the data the
 	// same way it will on the read-back.
 	void put(const string& key, const std::vector<mqtt::string_view>& bufs) override {
-		
+        string s;
+        for (const auto& b : bufs)
+            s.append(b.data(), b.size());
+
+        string key_ = key;
+        key_.erase(std::remove(key_.begin(), key_.end(), '-'),
+                   key_.end());
+		sqlite_client->instert_date(key_, s);
 	}
 
 	// Gets the specified data out of the persistent store.
 	// We look for a file with the name of the key, read the contents,
 	// decode, and return it.
 	string get(const string& key) const override {
-		return string();
+        string key_ = key;
+        key_.erase(std::remove(key_.begin(), key_.end(), '-'),
+                   key_.end());
+		return sqlite_client->getValue(key_);
 	}
 
 	// Remove the data for the specified key.
 	// Just remove the file with the same name as the key, if found.
 	void remove(const string &key) override {
-
+        string key_ = key;
+        key_.erase(std::remove(key_.begin(), key_.end(), '-'),
+                   key_.end());
+        sqlite_client->removeKey(key_);
 	}
 };
 
@@ -383,7 +378,8 @@ int main(int argc, char* argv[])
 	#if defined(_WIN32)
 		mqtt::async_client cli(address, CLIENT_ID, MAX_BUFFERED_MSGS);
 	#else
-		encoded_file_persistence persist("elephant");
+		//encoded_file_persistence persist("elephant");
+        encoded_sqlite3_persistence persist("elephant");
 
 		auto clientOpts = mqtt::create_options_builder()
 		.restore_messages(true)
