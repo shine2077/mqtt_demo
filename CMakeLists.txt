@@ -39,7 +39,8 @@ link_directories(${PROJECT_SOURCE_DIR}/lib)
 
 add_executable(data_publish src/data_publish.cpp
         src/sqliteclient/sqliteclient.h
-        src/sqliteclient/sqliteclient.cpp)
+        src/sqliteclient/sqliteclient.cpp
+        src/sqliteclient/sql.h)
 
 
 add_executable(sqlite_test "")

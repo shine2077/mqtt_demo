@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <cstdarg>
 #include <memory>
 #include <vector>
 
@@ -42,6 +43,9 @@ public:
     void removeKey(const std::string &key);
 
     void clearTable();
+
+private:
+    std::string formatSQL(const char* format, ...);
 
 
 private:
