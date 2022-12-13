@@ -103,10 +103,22 @@ class encoded_sqlite3_persistence : virtual public mqtt::iclient_persistence
 	// sqlite client
 	SQLiteClient* sqlite_client;
 
+    // A key for encoding the data
+    string encodeKey_;
+
+    // Simple, in-place XOR encoding and decoding
+    void encode(string& s) const {
+        size_t n = encodeKey_.size();
+        if (n == 0 || s.empty()) return;
+
+        for (size_t i=0; i<s.size(); ++i)
+            s[i] ^= encodeKey_[i%n];
+    }
+
 public:
 	// Create the persistence object with the specified encoding key
 	encoded_sqlite3_persistence(const string& encodeKey)
-			: sqlite_client(new SQLiteClient) {}
+			: encodeKey_(encodeKey),sqlite_client(new SQLiteClient) {}
 
     virtual ~encoded_sqlite3_persistence(){
         delete sqlite_client;
@@ -175,6 +187,8 @@ public:
         string key_ = key;
         key_.erase(std::remove(key_.begin(), key_.end(), '-'),
                    key_.end());
+
+        encode(s);
 		sqlite_client->instert_date(key_, s);
 	}
 
@@ -185,7 +199,9 @@ public:
         string key_ = key;
         key_.erase(std::remove(key_.begin(), key_.end(), '-'),
                    key_.end());
-		return sqlite_client->getValue(key_);
+		string s = sqlite_client->getValue(key_);
+        encode(s);
+        return s;
 	}
 
 	// Remove the data for the specified key.

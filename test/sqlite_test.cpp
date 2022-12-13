@@ -8,9 +8,9 @@ int main()
     SQLiteClient* sqlite_client = new SQLiteClient();
     sqlite_client->open("./test", SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
     sqlite_client->createTable("test", true);
-    sqlite_client->instert_date("c1","hello");
-    sqlite_client->instert_date("c2","sqlite3");
-    sqlite_client->instert_date("c3","hi");
+//    sqlite_client->instert_date("c1","hello");
+//    sqlite_client->instert_date("c2","sqlite3");
+//    sqlite_client->instert_date("c3","hi");
 //    bool result = sqlite_client->contains_key("c1");
 //    std::cout<<result<<std::endl;
 //    result = sqlite_client->contains_key("c2");

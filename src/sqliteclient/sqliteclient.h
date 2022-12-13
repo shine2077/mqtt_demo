@@ -44,6 +44,8 @@ public:
 
     void clearTable();
 
+    void exec(const std::string &sql);
+
 private:
     std::string formatSQL(const char* format, ...);
 

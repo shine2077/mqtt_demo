@@ -16,10 +16,10 @@ void SQLiteClient::createTable(const std::string &tablename, bool clean) {
             return;
         }else {
             mDb->exec("DROP TABLE IF EXISTS " + tablename);
-            mDb->exec("CREATE TABLE " + tablename +" (key TEXT PRIMARY KEY, value TEXT)");
+            mDb->exec("CREATE TABLE " + tablename +" (key TEXT PRIMARY KEY, value BLOB)");
         }
     }else{
-        mDb->exec("CREATE TABLE " + tablename +" (key TEXT PRIMARY KEY, value TEXT)");
+        mDb->exec("CREATE TABLE " + tablename +" (key TEXT PRIMARY KEY, value BLOB)");
     }
     table_ = tablename;
 }
@@ -72,6 +72,7 @@ std::vector<std::string> SQLiteClient::keys() {
     catch (std::exception& e)
     {
         std::cout << "SQLite exception: " << e.what() << std::endl;
+        return {};
     }
 }
 
@@ -115,6 +116,18 @@ void SQLiteClient::clearTable() {
     {
         std::cout << "SQLite exception: " << e.what() << std::endl;
     }
+}
+
+void SQLiteClient::exec(const std::string &sql) {
+    try
+    {
+        mDb->exec(sql);
+    }
+    catch (std::exception& e)
+    {
+        std::cout << "SQLite exception: " << e.what() << std::endl;
+    }
+
 }
 
 std::string SQLiteClient::formatSQL(const char *format, ...) {
