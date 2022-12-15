@@ -98,6 +98,8 @@ public:
 
     void clearTable();
 
+    void exec(const std::string &sql);
+
 private:
     sqlite3* db_;    ///< Database connection
     std::string tablename_;

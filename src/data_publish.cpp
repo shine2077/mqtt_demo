@@ -190,6 +190,7 @@ public:
                    key_.end());
 
         //encode(s);
+
 		sqlite_client->instert_date(key_, s);
 	}
 
@@ -201,6 +202,7 @@ public:
         key_.erase(std::remove(key_.begin(), key_.end(), '-'),
                    key_.end());
 		string s = sqlite_client->getValue(key_);
+
         //encode(s);
         return s;
 	}

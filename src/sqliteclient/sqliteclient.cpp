@@ -146,8 +146,8 @@ std::vector<std::string> SQLiteClient::keys() {
 std::string SQLiteClient::getValue(const std::string &key) {
     sql::SelectModel s;
     s.select("value")
-            .from(tablename_)
-            .where(sql::column("key") == key);
+    .from(tablename_)
+    .where(sql::column("key") == key);
     std::string select_sql = s.str();
 
     sqlite3_stmt*  stmt = nullptr;
@@ -177,8 +177,8 @@ std::string SQLiteClient::getValue(const std::string &key) {
 void SQLiteClient::removeKey(const std::string &key) {
     sql::DeleteModel d;
     d._delete()
-        .from(tablename_)
-        .where(sql::column("key") == key);
+    .from(tablename_)
+    .where(sql::column("key") == key);
 
     int status;
     char* err_masg = nullptr;
@@ -190,7 +190,7 @@ void SQLiteClient::removeKey(const std::string &key) {
 void SQLiteClient::clearTable() {
     sql::DeleteModel d;
     d._delete()
-            .from(tablename_);
+    .from(tablename_);
 
     int status;
     char* err_masg = nullptr;
