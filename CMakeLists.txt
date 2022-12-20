@@ -17,7 +17,7 @@
 #   http://www.eclipse.org/org/documents/edl-v10.php.
 #*******************************************************************************/
 
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.15)
 set(CMAKE_DEBUG_POSTFIX d)
 project(mqtt_demo)
 
@@ -25,11 +25,6 @@ project(mqtt_demo)
 
 set (THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-
-##sqlite support
-set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "" FORCE)
-set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "" FORCE)
-add_subdirectory(SQLiteCpp)
 
 ## include directories
 include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -51,7 +46,7 @@ target_sources(sqlite_test
         src/sqliteclient/sqliteclient.cpp)
 
 ## link binaries
-target_link_libraries(data_publish -lpaho-mqttpp3 -lpaho-mqtt3a -lpaho-mqtt3as SQLiteCpp)
-target_link_libraries(sqlite_test SQLiteCpp)
+target_link_libraries(data_publish -lpaho-mqttpp3 -lpaho-mqtt3a -lpaho-mqtt3as -lsqlite3)
+target_link_libraries(sqlite_test)
 
 

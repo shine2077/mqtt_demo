@@ -50,7 +50,7 @@ static bool FLAGS_use_rowids = false;
 static bool FLAGS_transaction = true;
 
 // If true, we enable Write-Ahead Logging
-static bool FLAGS_WAL_enabled = true;
+static bool FLAGS_WAL_enabled = false;
 
 // Use the db with the following name.
 static const char* FLAGS_db = nullptr;
@@ -76,8 +76,8 @@ public:
     SQLiteClient() : db_(nullptr) {};
 
     // SQLiteClient is non-copyable
-    SQLiteClient(const SQLiteClientB &) = delete;
-    SQLiteClient& operator=(const SQLiteClientB&) = delete;
+    SQLiteClient(const SQLiteClient &) = delete;
+    SQLiteClient& operator=(const SQLiteClient&) = delete;
 
     ~SQLiteClient();
 
@@ -97,8 +97,6 @@ public:
     void removeKey(const std::string &key);
 
     void clearTable();
-
-    void exec(const std::string &sql);
 
 private:
     sqlite3* db_;    ///< Database connection

@@ -57,9 +57,9 @@ void SQLiteClient::createTable(const std::string &tablename, bool clean) {
     int status;
     char* err_msg = nullptr;
     // Change locking mode to exclusive and create tables/index for database
-    std::string locking_stmt = "PRAGMA locking_mode = EXCLUSIVE";
+    //std::string locking_stmt = "PRAGMA locking_mode = EXCLUSIVE";
     std::string create_stmt =
-            "CREATE TABLE IF NOT EXISTS " + tablename_ + " (key blob, value blob, PRIMARY KEY(key))";
+            "CREATE TABLE IF NOT EXISTS " + tablename_ + " (key TEXT PRIMARY KEY, value TEXT)";
 
     if (!FLAGS_use_rowids) create_stmt += " WITHOUT ROWID";
 
@@ -67,14 +67,15 @@ void SQLiteClient::createTable(const std::string &tablename, bool clean) {
 
     if(clean){
         std::string clean_stmt = "DROP TABLE IF EXISTS " + tablename_;
-        stmt_array = {locking_stmt, clean_stmt, create_stmt};
+        stmt_array = {clean_stmt, create_stmt};
     }else {
-        stmt_array = {locking_stmt, create_stmt};
+        stmt_array = {create_stmt};
     }
 
     auto stmt_array_length = stmt_array.size();
     for (int i = 0; i < stmt_array_length; i++) {
-        status = sqlite3_exec(db_, stmt_array[i].c_str(), nullptr, nullptr, &err_msg);
+        const char *sql = stmt_array[i].c_str();
+        status = sqlite3_exec(db_, sql, nullptr, nullptr, &err_msg);
         ExecErrorCheck(status, err_msg);
     }
 }
@@ -90,7 +91,27 @@ void SQLiteClient::instert_date(const std::string &key, const std::string &value
     int status;
     char* err_msg = nullptr;
 
-    status = sqlite3_exec(db_, instert_sql.c_str(), nullptr, nullptr, &err_msg);
+    const char* sql = instert_sql.c_str();
+
+    status = sqlite3_exec(db_, sql, nullptr, nullptr, &err_msg);
+
+//    sqlite3_stmt* stmt = nullptr;
+//    bool done = false;
+//
+//    sqlite3_prepare_v2(db_, sql, -1, &stmt, NULL);
+//    while (!done) {
+//        switch (sqlite3_step (stmt)) {
+//            case SQLITE_ROW:
+//                break;
+//            case SQLITE_DONE:
+//                done = true;
+//                break;
+//            default:
+//                std::fprintf(stderr, "instert failed.\n");
+//                break;
+//        }
+//    }
+//    sqlite3_finalize(stmt);
     ExecErrorCheck(status, err_msg);
 }
 
@@ -105,7 +126,8 @@ bool SQLiteClient::contains_key(const std::string &key) {
     int status;
     char* err_masg = nullptr;
 
-    status = sqlite3_exec(db_, select_sql.c_str(), nullptr, nullptr, &err_masg);
+    const char* sql = select_sql.c_str();
+    status = sqlite3_exec(db_, sql, nullptr, nullptr, &err_masg);
     ExecErrorCheck(status, err_masg);
 
     return true;
@@ -117,24 +139,25 @@ std::vector<std::string> SQLiteClient::keys() {
     s.select("key")
             .from(tablename_);
     std::string select_sql = s.str();
+    const char* select_sql_cstr = select_sql.c_str();
 
-    sqlite3_stmt*  stmt = nullptr;
+    sqlite3_stmt* stmt = nullptr;
     std::string key;
     std::vector<std::string> keys{};
     bool done = false;
 
-    sqlite3_prepare(db_, select_sql.c_str(), sizeof(select_sql.c_str()), &stmt, NULL);
+    sqlite3_prepare_v2(db_, select_sql_cstr, -1, &stmt, NULL);
     while (!done) {
         switch (sqlite3_step (stmt)) {
             case SQLITE_ROW:
-                key  = std::string( reinterpret_cast< char const* >(sqlite3_column_text(stmt, 1)) );
+                key  = std::string( reinterpret_cast< char const* >(sqlite3_column_text(stmt, 0)) );
                 keys.push_back(key);
                 break;
             case SQLITE_DONE:
                 done = true;
                 break;
             default:
-                std::fprintf(stderr, "Failed.\n");
+                std::fprintf(stderr, "quary keys failed.\n");
                 break;
         }
     }
@@ -148,24 +171,26 @@ std::string SQLiteClient::getValue(const std::string &key) {
     s.select("value")
     .from(tablename_)
     .where(sql::column("key") == key);
+
     std::string select_sql = s.str();
+    const char* select_sql_cstr = select_sql.c_str();
 
     sqlite3_stmt*  stmt = nullptr;
     std::string value;
 
     bool done = false;
 
-    sqlite3_prepare(db_, select_sql.c_str(), sizeof(select_sql.c_str()), &stmt, NULL);
+    sqlite3_prepare(db_, select_sql_cstr, -1, &stmt, NULL);
     while (!done) {
         switch (sqlite3_step (stmt)) {
             case SQLITE_ROW:
-                value  = std::string( reinterpret_cast< char const* >(sqlite3_column_text(stmt, 1)) );
+                value  = std::string( reinterpret_cast< char const* >(sqlite3_column_text(stmt, 0)) );
                 break;
             case SQLITE_DONE:
                 done = true;
                 break;
             default:
-                std::fprintf(stderr, "Failed.\n");
+                std::fprintf(stderr, "get value failed.\n");
                 break;
         }
     }
@@ -183,7 +208,8 @@ void SQLiteClient::removeKey(const std::string &key) {
     int status;
     char* err_masg = nullptr;
 
-    status = sqlite3_exec(db_, d.str().c_str(), nullptr, nullptr, &err_masg);
+    const char* sql = d.str().c_str();
+    status = sqlite3_exec(db_, sql, nullptr, nullptr, &err_masg);
     ExecErrorCheck(status, err_masg);
 }
 
