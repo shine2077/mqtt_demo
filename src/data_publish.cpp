@@ -67,7 +67,7 @@ using namespace std::chrono;
 const std::string DFLT_ADDRESS { "tcp://47.95.150.143:1883" };
 const std::string CLIENT_ID { "mqttclient" };
 
-const string TOPIC { "data/rand" };
+const string TOPIC { "data" };
 const int	 QOS = 1;
 
 const auto PERIOD = seconds(3);
@@ -233,9 +233,6 @@ int main(int argc, char* argv[])
 		cout << "Connecting to server '" << address << "'..." << flush;
 		cli.connect(connOpts)->wait();
 		cout << "OK\n" << endl;
-
-		char tmbuf[32];
-		unsigned nsample = 0;
 
 		// The time at which to reads the next sample, starting now
 		auto tm = steady_clock::now();

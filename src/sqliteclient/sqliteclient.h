@@ -15,6 +15,8 @@
 
 #include <sqlite3.h>
 
+#include "mqtt/async_client.h"
+
 // Number of key/values to place in database
 static int FLAGS_num = 1000000;
 
@@ -58,7 +60,8 @@ static const char* FLAGS_db = nullptr;
 inline static void ErrorCheck(int status) {
     if (status != SQLITE_OK) {
         std::fprintf(stderr, "sqlite3 error: status = %d\n", status);
-        std::exit(1);
+        //std::exit(1);
+        throw mqtt::persistence_exception();
     }
 }
 
@@ -66,7 +69,8 @@ inline static void ExecErrorCheck(int status, char* err_msg) {
     if (status != SQLITE_OK) {
         std::fprintf(stderr, "SQL error: %s\n", err_msg);
         sqlite3_free(err_msg);
-        std::exit(1);
+        //std::exit(1);
+        throw mqtt::persistence_exception();
     }
 }
 
