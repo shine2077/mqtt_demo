@@ -90,14 +90,20 @@ class encoded_sqlite3_persistence : virtual public mqtt::iclient_persistence
 
     // encoding
     void encode(string& s) const {
-        for (size_t i=0; i<s.size(); ++i)
-            s[i] += '\001';
+        for(auto &c : s){
+            if(c == '\000'){
+                c = '\040';
+            }
+        }
     }
 
     // decoding
     void decode(string& s) const {
-        for (size_t i=0; i<s.size(); ++i)
-            s[i] -= '\001';
+        for(auto &c : s){
+            if(c == '\040'){
+                c = '\000';
+            }
+        }
     }
 
 
