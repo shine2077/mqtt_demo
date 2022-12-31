@@ -141,10 +141,7 @@ public:
 	// We just look for a file in the store directory with the same name as
 	// the key.
 	bool contains_key(const string& key) override {
-        string key_ = key;
-        key_.erase(std::remove(key_.begin(), key_.end(), '-'),
-                   key_.end());
-		return sqlite_client->contains_key(key_);
+		return sqlite_client->contains_key(key);
 	}
 
 	// Returns the keys in this persistent data store.
@@ -170,23 +167,16 @@ public:
             s.append(b.data(), b.size());
         }
 
-        string key_ = key;
-        //key_.erase(std::remove(key_.begin(), key_.end(), '-'),
-        //           key_.end());
-
         encode(s);
 
-		sqlite_client->instert_date(key_, s);
+		sqlite_client->instert_date(key, s);
 	}
 
 	// Gets the specified data out of the persistent store.
 	// We look for a file with the name of the key, read the contents,
 	// decode, and return it.
 	string get(const string& key) const override {
-        string key_ = key;
-        //key_.erase(std::remove(key_.begin(), key_.end(), '-'),
-        //           key_.end());
-		string s = sqlite_client->getValue(key_);
+		string s = sqlite_client->getValue(key);
 
         decode(s);
         return s;
@@ -195,10 +185,7 @@ public:
 	// Remove the data for the specified key.
 	// Just remove the file with the same name as the key, if found.
 	void remove(const string &key) override {
-        string key_ = key;
-        //key_.erase(std::remove(key_.begin(), key_.end(), '-'),
-        //           key_.end());
-        sqlite_client->removeKey(key_);
+        sqlite_client->removeKey(key);
 	}
 };
 
