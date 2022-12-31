@@ -59,6 +59,7 @@
 #include <cstring>
 #include <ctime>
 #include "mqtt/async_client.h"
+#include <cbor.h>
 
 using namespace std;
 using namespace std::chrono;
@@ -243,17 +244,42 @@ int main(int argc, char* argv[])
 			// Pace the samples to the desired rate
 			this_thread::sleep_until(tm);
 
-			// Get a timestamp and format as a string
-			time_t t = system_clock::to_time_t(system_clock::now());
-			strftime(tmbuf, sizeof(tmbuf), "%F %T", localtime(&t));
+            // Get a timestamp and format as a string
+            time_t t = system_clock::to_time_t(system_clock::now());
 
-			// Simulate reading some data
-			int x = dis(gen);
+            /* Preallocate the map structure */
+            cbor_item_t* root = cbor_new_definite_map(3);
+            /* Add the content */
+            bool success = cbor_map_add(
+                    root, (struct cbor_pair){
+                            .key = cbor_move(cbor_build_string("motor_speed")),
+                            .value = cbor_move(cbor_build_float4(812.00))});
+            success &= cbor_map_add(
+                    root, (struct cbor_pair){
+                            .key = cbor_move(cbor_build_string("fuel_level")),
+                            .value = cbor_move(cbor_build_float4(73.12))});
+            success &= cbor_map_add(
+                    root, (struct cbor_pair){
+                            .key = cbor_move(cbor_build_string("timestamp")),
+                            .value = cbor_move(cbor_build_uint32(t))});
+            if (!success) return 1;
+            /* Output: `length` bytes of data in the `buffer` */
+            unsigned char* buffer;
+            size_t buffer_size;
+            cbor_serialize_alloc(root, &buffer, &buffer_size);
 
-			// Create the payload as a text CSV string
-			string payload = to_string(++nsample) + "," +
-								tmbuf + "," + to_string(x);
-			cout << payload << endl;
+            string payload(reinterpret_cast<char*>(buffer));
+
+            cbor_decref(&root);
+
+            /* Assuming `buffer` contains `info.st_size` bytes of input data */
+//            struct cbor_load_result result;
+//            cbor_item_t * item = cbor_load(buffer, buffer_size, &result);
+//            /* Pretty-print the result */
+//            cbor_describe(item, stdout);
+//            fflush(stdout);
+//            /* Deallocate the result */
+//            cbor_decref(&item);
 
 			// Publish to the topic
 			top.publish(std::move(payload));

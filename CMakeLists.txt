@@ -46,7 +46,7 @@ target_sources(sqlite_test
         src/sqliteclient/sqliteclient.cpp)
 
 ## link binaries
-target_link_libraries(data_publish -lpaho-mqttpp3 -lpaho-mqtt3a -lpaho-mqtt3as -lsqlite3)
+target_link_libraries(data_publish -lpaho-mqttpp3 -lpaho-mqtt3a -lpaho-mqtt3as -lsqlite3 -lcbor)
 target_link_libraries(sqlite_test)
 
 
