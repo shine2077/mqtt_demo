@@ -95,23 +95,6 @@ void SQLiteClient::instert_date(const std::string &key, const std::string &value
 
     status = sqlite3_exec(db_, sql, nullptr, nullptr, &err_msg);
 
-//    sqlite3_stmt* stmt = nullptr;
-//    bool done = false;
-//
-//    sqlite3_prepare_v2(db_, sql, -1, &stmt, NULL);
-//    while (!done) {
-//        switch (sqlite3_step (stmt)) {
-//            case SQLITE_ROW:
-//                break;
-//            case SQLITE_DONE:
-//                done = true;
-//                break;
-//            default:
-//                std::fprintf(stderr, "instert failed.\n");
-//                break;
-//        }
-//    }
-//    sqlite3_finalize(stmt);
     ExecErrorCheck(status, err_msg);
 }
 
@@ -145,10 +128,11 @@ std::vector<std::string> SQLiteClient::keys() {
     std::string key;
     std::vector<std::string> keys{};
     bool done = false;
-
+    int status;
     sqlite3_prepare_v2(db_, select_sql_cstr, -1, &stmt, NULL);
     while (!done) {
-        switch (sqlite3_step (stmt)) {
+        status = sqlite3_step(stmt);
+        switch (status) {
             case SQLITE_ROW:
                 key  = std::string( reinterpret_cast< char const* >(sqlite3_column_text(stmt, 0)) );
                 keys.push_back(key);
@@ -157,7 +141,7 @@ std::vector<std::string> SQLiteClient::keys() {
                 done = true;
                 break;
             default:
-                std::fprintf(stderr, "quary keys failed.\n");
+                StepErrorCheck(status);
                 break;
         }
     }
@@ -179,10 +163,11 @@ std::string SQLiteClient::getValue(const std::string &key) {
     std::string value;
 
     bool done = false;
-
+    int status;
     sqlite3_prepare(db_, select_sql_cstr, -1, &stmt, NULL);
     while (!done) {
-        switch (sqlite3_step (stmt)) {
+        status = sqlite3_step(stmt);
+        switch (status) {
             case SQLITE_ROW:
                 value  = std::string( reinterpret_cast< char const* >(sqlite3_column_text(stmt, 0)) );
                 break;
@@ -190,7 +175,7 @@ std::string SQLiteClient::getValue(const std::string &key) {
                 done = true;
                 break;
             default:
-                std::fprintf(stderr, "get value failed.\n");
+                StepErrorCheck(status);
                 break;
         }
     }

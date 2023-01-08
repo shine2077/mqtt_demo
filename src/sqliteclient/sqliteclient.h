@@ -65,6 +65,13 @@ inline static void ErrorCheck(int status) {
     }
 }
 
+inline static void StepErrorCheck(int status) {
+    if (status != SQLITE_DONE) {
+        std::fprintf(stderr, "SQL step error: status = %d\n", status);
+        throw mqtt::persistence_exception();
+    }
+}
+
 inline static void ExecErrorCheck(int status, char* err_msg) {
     if (status != SQLITE_OK) {
         std::fprintf(stderr, "SQL error: %s\n", err_msg);
